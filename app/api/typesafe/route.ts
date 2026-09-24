@@ -12,12 +12,13 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const startMs = Date.now();
 
     const response = await fetch('https://api.typesafe.ai/v1/systemone', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-typesafe-key': apiKey,
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify(body),
     });
@@ -31,7 +32,8 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json();
-    return NextResponse.json(data);
+    const timing_ms = Date.now() - startMs;
+    return NextResponse.json({ ...data, timing_ms });
   } catch (error) {
     console.error('API proxy error:', error);
     return NextResponse.json(
