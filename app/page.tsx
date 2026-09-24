@@ -13,29 +13,28 @@ const PRESETS = {
   },
 };
 
-interface NoulResult {
-  probability: number;
+interface NoulAnswer {
+  type: 'noul';
+  noul: number;
 }
 
-interface ChoiceResult {
-  winner: string;
-  probabilities: {
-    yes: number;
-    no: number;
-  };
+interface ChoiceAnswer {
+  type: 'choice';
+  choice: string;
+  probabilities: Record<string, number>;
   confidence: number;
 }
 
 interface ApiResponse {
-  data: {
-    as_noul: NoulResult;
-    as_choice: ChoiceResult;
-    negation_noul: NoulResult;
+  answers: {
+    as_noul: NoulAnswer;
+    as_choice: ChoiceAnswer;
+    negation_noul: NoulAnswer;
   };
-  timing_ms: number;
-  usage: {
-    input_tokens: number;
-    output_tokens: number;
+  timing_ms?: number;
+  usage?: {
+    input_tokens?: number;
+    output_tokens?: number;
   };
 }
 
@@ -109,10 +108,10 @@ export default function Home() {
     }
   };
 
-  const noulDecision = result && result.data.as_noul.probability > 0.5 ? 'yes' : 'no';
-  const choiceDecision = result?.data.as_choice.winner;
+  const noulDecision = result && result.answers.as_noul.noul > 0.5 ? 'yes' : 'no';
+  const choiceDecision = result?.answers.as_choice.choice;
   const hasDisagreement = result && noulDecision !== choiceDecision;
-  const noulSum = result ? result.data.as_noul.probability + result.data.negation_noul.probability : 0;
+  const noulSum = result ? result.answers.as_noul.noul + result.answers.negation_noul.noul : 0;
   const sumOutOfRange = result && (noulSum < 0.98 || noulSum > 1.02);
 
   return (
@@ -213,7 +212,7 @@ export default function Home() {
                 <div className="space-y-1">
                   <p className="text-sm text-slate-600 dark:text-slate-400">
                     Probability: <span className="font-mono font-semibold text-slate-900 dark:text-slate-100">
-                      {result.data.as_noul.probability.toFixed(3)}
+                      {result.answers.as_noul.noul.toFixed(3)}
                     </span>
                   </p>
                   <p className="text-sm text-slate-600 dark:text-slate-400">
@@ -229,22 +228,22 @@ export default function Home() {
                 <div className="space-y-1">
                   <p className="text-sm text-slate-600 dark:text-slate-400">
                     Winner: <span className="font-semibold text-slate-900 dark:text-slate-100">
-                      {result.data.as_choice.winner}
+                      {result.answers.as_choice.choice}
                     </span>
                   </p>
                   <p className="text-sm text-slate-600 dark:text-slate-400">
                     Yes: <span className="font-mono text-slate-900 dark:text-slate-100">
-                      {result.data.as_choice.probabilities.yes.toFixed(3)}
+                      {result.answers.as_choice.probabilities.yes.toFixed(3)}
                     </span>
                   </p>
                   <p className="text-sm text-slate-600 dark:text-slate-400">
                     No: <span className="font-mono text-slate-900 dark:text-slate-100">
-                      {result.data.as_choice.probabilities.no.toFixed(3)}
+                      {result.answers.as_choice.probabilities.no.toFixed(3)}
                     </span>
                   </p>
                   <p className="text-sm text-slate-600 dark:text-slate-400">
                     Confidence: <span className="font-mono text-slate-900 dark:text-slate-100">
-                      {result.data.as_choice.confidence.toFixed(3)}
+                      {result.answers.as_choice.confidence.toFixed(3)}
                     </span>
                   </p>
                 </div>
@@ -255,7 +254,7 @@ export default function Home() {
                 <div className="space-y-1">
                   <p className="text-sm text-slate-600 dark:text-slate-400">
                     Negation Probability: <span className="font-mono text-slate-900 dark:text-slate-100">
-                      {result.data.negation_noul.probability.toFixed(3)}
+                      {result.answers.negation_noul.noul.toFixed(3)}
                     </span>
                   </p>
                   <p className="text-sm text-slate-600 dark:text-slate-400">
@@ -273,8 +272,8 @@ export default function Home() {
               </div>
 
               <div className="bg-slate-100 dark:bg-slate-900 rounded-lg p-3 text-xs text-slate-600 dark:text-slate-400">
-                <p>Timing: {result.timing_ms}ms</p>
-                <p>Tokens: {result.usage.input_tokens} in / {result.usage.output_tokens} out</p>
+                {result.timing_ms && <p>Timing: {result.timing_ms}ms</p>}
+                {result.usage && <p>Tokens: {result.usage.input_tokens} in / {result.usage.output_tokens} out</p>}
               </div>
             </div>
           )}
